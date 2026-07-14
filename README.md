@@ -1,5 +1,6 @@
 # Nyxora Lead Concierge
 
+[![CI](https://github.com/Ryork67677/nyxora-lead-concierge/actions/workflows/ci.yml/badge.svg)](https://github.com/Ryork67677/nyxora-lead-concierge/actions/workflows/ci.yml)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11%2B-3776AB.svg)](https://www.python.org/)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 
@@ -39,7 +40,7 @@ uses a fail-closed design:
 - Explicit `answer`, `book_consultation`, `human_handoff`, and `emergency_help` actions
 - Consent-gated SQLite event storage using hashed session identifiers
 - FastAPI interactive documentation at `/docs`
-- Docker runtime, local quality gates, and a documented GitHub Actions workflow example
+- Docker runtime, GitHub Actions CI, local quality gates, tests, and behavior evaluations
 
 ## Architecture
 
@@ -110,9 +111,9 @@ python -m nyxora_concierge.evaluation
 ```
 
 The evaluation suite contains ordinary lead questions, unsupported questions, clinical edge
-cases, urgent symptoms, and a prompt-injection attempt. The evaluation gate requires a 90% end-to-end
-case pass rate and 85% test coverage. These are initial engineering gates, not claims of clinical
-validation or production readiness.
+cases, urgent symptoms, and a prompt-injection attempt. CI requires a 90% end-to-end case pass
+rate and 85% test coverage. These are initial engineering gates, not claims of clinical validation
+or production readiness.
 
 Verified locally on July 14, 2026:
 
@@ -154,8 +155,7 @@ See [SECURITY.md](SECURITY.md) for limitations and safe reporting.
 - [x] Lead qualification and action routing
 - [x] Safety, privacy, and human-handoff policies
 - [x] Automated tests and behavior evaluation
-- [x] Docker and repeatable local quality gates
-- [ ] Activate the documented GitHub Actions workflow
+- [x] Docker, repeatable local quality gates, and GitHub Actions CI
 - [x] Add a provider-neutral generator interface and local Ollama adapter behind the policy layer
 - [x] Integrate the locally available `qwen3:14b` model
 - [ ] Expand the evaluation set to 100 reviewed cases
