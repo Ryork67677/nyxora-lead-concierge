@@ -9,6 +9,10 @@ It is the code-first companion to the broader Nyxora automation platform and dem
 API design, grounded retrieval, safety controls, evaluation, testing, persistence, and
 containerized deployment.
 
+The broader Nyxora platform contains the operational dashboard, CRM and follow-up workflows,
+and business analytics. Those capabilities are intentionally outside this public companion's
+scope rather than duplicated here.
+
 **[View the always-available recorded behavior demo](https://ryork67677.github.io/nyxora-lead-concierge/)**
 
 > **Project status:** v0.2 local-model integration. Responses are grounded in a versioned
@@ -149,7 +153,7 @@ These timings are a single local smoke test, not a performance benchmark.
 
 See [SECURITY.md](SECURITY.md) for limitations and safe reporting.
 
-## Roadmap
+## Scope status
 
 - [x] Grounded knowledge retrieval and explicit citations
 - [x] Lead qualification and action routing
@@ -158,9 +162,11 @@ See [SECURITY.md](SECURITY.md) for limitations and safe reporting.
 - [x] Docker, repeatable local quality gates, and GitHub Actions CI
 - [x] Add a provider-neutral generator interface and local Ollama adapter behind the policy layer
 - [x] Integrate the locally available `qwen3:14b` model
-- [ ] Expand the evaluation set to 100 reviewed cases
-- [ ] Add authenticated aggregate metrics and an observability dashboard
-- [ ] Run a documented red-team review before any real-world pilot
+
+The portfolio scope is complete at v0.2. Expanding the evaluation set and running a documented
+red-team review remain appropriate future hardening steps before any real-world pilot, but this
+repository will not recreate the operational dashboard and follow-up systems maintained in the
+broader Nyxora platform.
 
 ## Honest scope
 
