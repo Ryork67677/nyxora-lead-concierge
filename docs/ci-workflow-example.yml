@@ -25,4 +25,3 @@ jobs:
         run: pytest
       - name: Evaluate behavior
         run: python -m nyxora_concierge.evaluation --minimum-pass-rate 0.90
-
