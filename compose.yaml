@@ -1,0 +1,15 @@
+services:
+  api:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      APP_ENV: production
+      DATABASE_PATH: /app/data/concierge.db
+    volumes:
+      - concierge-data:/app/data
+    restart: unless-stopped
+
+volumes:
+  concierge-data:
+

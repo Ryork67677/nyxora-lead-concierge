@@ -1,0 +1,39 @@
+[
+  {
+    "id": "consultations",
+    "title": "Consultations",
+    "content": "A consultation is the appropriate first step for personalized treatment questions. A qualified provider reviews goals, relevant history, suitability, expected outcomes, and risks before recommending a service.",
+    "tags": ["consultation", "new client", "first visit", "recommendation", "booking"]
+  },
+  {
+    "id": "appointments",
+    "title": "Appointment requests",
+    "content": "Appointment requests require a preferred service, date range, and contact method. Availability is confirmed by a team member; the assistant does not promise a specific appointment time.",
+    "tags": ["appointment", "book", "schedule", "availability", "call", "text"]
+  },
+  {
+    "id": "pricing",
+    "title": "Pricing policy",
+    "content": "Pricing depends on the service and individualized plan. The team confirms current pricing during the consultation process; the assistant does not invent estimates or guarantee promotions.",
+    "tags": ["price", "pricing", "cost", "payment", "promotion"]
+  },
+  {
+    "id": "preparation",
+    "title": "Treatment preparation",
+    "content": "Preparation instructions vary by treatment and medical history. Follow only the instructions issued by the treating provider, and contact the clinic if those instructions are missing or unclear.",
+    "tags": ["prepare", "preparation", "before", "pre-treatment", "instructions"]
+  },
+  {
+    "id": "aftercare",
+    "title": "Aftercare guidance",
+    "content": "Aftercare varies by treatment. Follow the written instructions from the treating provider. Contact the clinic for treatment-specific questions, and seek urgent medical help for severe or rapidly worsening symptoms.",
+    "tags": ["aftercare", "recovery", "after treatment", "instructions", "side effect"]
+  },
+  {
+    "id": "changes",
+    "title": "Cancellations and rescheduling",
+    "content": "Cancellation and rescheduling policies depend on the provider. A team member must verify the appointment and explain any applicable notice requirements or fees.",
+    "tags": ["cancel", "cancellation", "reschedule", "appointment", "fee"]
+  }
+]
+
