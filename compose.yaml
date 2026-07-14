@@ -6,10 +6,11 @@ services:
     environment:
       APP_ENV: production
       DATABASE_PATH: /app/data/concierge.db
+      OLLAMA_BASE_URL: http://host.docker.internal:11434
+      OLLAMA_MODEL: qwen3:14b
     volumes:
       - concierge-data:/app/data
     restart: unless-stopped
 
 volumes:
   concierge-data:
-

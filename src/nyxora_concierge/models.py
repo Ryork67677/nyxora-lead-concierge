@@ -23,6 +23,12 @@ class RecommendedAction(StrEnum):
     EMERGENCY_HELP = "emergency_help"
 
 
+class GenerationMode(StrEnum):
+    DETERMINISTIC = "deterministic"
+    OLLAMA = "ollama"
+    FALLBACK = "fallback"
+
+
 class LeadContext(BaseModel):
     service_interest: str | None = Field(default=None, max_length=100)
     timeline: str | None = Field(default=None, max_length=80)
@@ -53,10 +59,10 @@ class ChatResponse(BaseModel):
     requires_human: bool
     safety_flags: list[str] = Field(default_factory=list)
     knowledge_sources: list[str] = Field(default_factory=list)
+    generation_mode: GenerationMode = GenerationMode.DETERMINISTIC
     stored: bool = False
 
 
 class HealthResponse(BaseModel):
     status: str
     version: str
-

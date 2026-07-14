@@ -15,9 +15,11 @@ medical advice, inventing business facts, or collecting unnecessary personal dat
    a transparent lead score from service interest, timeline, contact preference, and visit status.
 4. **Retrieval grounds the answer.** Token overlap ranks entries from a synthetic, versioned JSON
    knowledge base. No match means no invented answer.
-5. **Action routing is explicit.** Responses return a machine-readable action and handoff flag for
+5. **The local model has a narrow role.** When enabled, Ollama rewrites only retrieved facts into a
+   concise response. It cannot set intent, score, safety flags, handoff, or recommended action.
+6. **Action routing is explicit.** Responses return a machine-readable action and handoff flag for
    future n8n or website integration.
-6. **Persistence is opt-in and minimized.** With consent, only outcome metadata and a hashed
+7. **Persistence is opt-in and minimized.** With consent, only outcome metadata and a hashed
    session identifier are stored in SQLite. Raw messages are not retained.
 
 ## Components
@@ -28,6 +30,7 @@ medical advice, inventing business facts, or collecting unnecessary personal dat
 | `safety.py` | Urgent, clinical, and injection policy | Routes to human or emergency help |
 | `qualification.py` | Intent and lead score | Defaults to general/low confidence |
 | `knowledge.py` | Reviewable retrieval | Returns no answer when ungrounded |
+| `generation.py` | Local grounded rewriting | Falls back to verified deterministic text |
 | `service.py` | Orchestration and action policy | Fails closed to human handoff |
 | `repository.py` | Consent-gated event storage | Stores no transcript or raw session ID |
 | `evaluation.py` | Repeatable behavior measurement | Fails CI below the quality gate |
@@ -36,7 +39,7 @@ medical advice, inventing business facts, or collecting unnecessary personal dat
 
 - Website input is untrusted and validated at the API boundary.
 - Knowledge-base content is trusted only after repository review.
-- A future model provider will be treated as untrusted output and placed after safety checks.
+- Ollama is treated as untrusted output and is placed after safety checks and retrieval.
 - SQLite is local application state and must not be publicly exposed.
 - Human operators remain responsible for appointment confirmation and clinical communication.
 
@@ -46,4 +49,3 @@ The current version is portfolio software, not a production healthcare system. A
 need authenticated staff tools, rate limiting, secrets management, encrypted managed storage,
 retention policies, monitoring, legal/privacy review, model-provider review, and broader safety
 evaluation with domain experts.
-

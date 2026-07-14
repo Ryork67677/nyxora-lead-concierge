@@ -9,9 +9,9 @@ It is the code-first companion to the broader Nyxora automation platform and dem
 API design, grounded retrieval, safety controls, evaluation, testing, persistence, and
 containerized deployment.
 
-> **Project status:** v0.1 safety baseline. Responses are grounded in a versioned knowledge
-> base and deterministic policy layer. A model-backed response generator will only be added
-> behind these controls, so model output cannot bypass escalation or evaluation rules.
+> **Project status:** v0.2 local-model integration. Responses are grounded in a versioned
+> knowledge base and deterministic policy layer. A local `qwen3:14b` model may rewrite verified
+> facts for clarity, but it cannot bypass escalation, action routing, or evaluation rules.
 
 This educational project does not provide medical advice and is not connected to real customer
 data or a healthcare provider.
@@ -33,6 +33,7 @@ uses a fail-closed design:
 - `POST /v1/chat` with validated, structured input and output
 - Intent classification and transparent 0–100 lead qualification
 - Grounded retrieval with visible knowledge-source names
+- Optional local generation through Ollama and `qwen3:14b`, with deterministic fallback
 - Emergency, clinical-review, and prompt-injection detection
 - Explicit `answer`, `book_consultation`, `human_handoff`, and `emergency_help` actions
 - Consent-gated SQLite event storage using hashed session identifiers
@@ -48,7 +49,9 @@ flowchart LR
     Safety -->|urgent or clinical| Handoff[Human or emergency handoff]
     Safety -->|allowed| Qualify[Intent and lead scoring]
     Qualify --> Retrieval[Grounded knowledge retrieval]
-    Retrieval --> Response[Structured response]
+    Retrieval --> Model[Optional local Ollama rewrite]
+    Model --> Response[Structured response]
+    Retrieval -->|model unavailable| Response
     Response --> Client
     Response -->|explicit consent only| Store[(Privacy-minimized events)]
 ```
@@ -65,7 +68,8 @@ Requirements: Python 3.11 or newer.
 python -m venv .venv
 source .venv/bin/activate  # Windows PowerShell: .venv\Scripts\Activate.ps1
 python -m pip install -e ".[dev]"
-uvicorn nyxora_concierge.main:app --reload
+cp .env.example .env  # Windows PowerShell: Copy-Item .env.example .env
+uvicorn nyxora_concierge.main:app --reload --env-file .env
 ```
 
 Open `http://127.0.0.1:8000/docs`, or send a request:
@@ -91,6 +95,7 @@ Example response:
   "requires_human": false,
   "safety_flags": [],
   "knowledge_sources": ["Appointment requests", "Consultations"],
+  "generation_mode": "ollama",
   "stored": false
 }
 ```
@@ -112,10 +117,23 @@ Verified locally on July 14, 2026:
 
 | Check | Result |
 |---|---:|
-| Automated tests | 18 passed |
+| Automated tests | 23 passed |
 | Code coverage | 94% |
 | Behavior evaluation | 12/12 cases passed |
 | Safety-case recall | 100% |
+
+Local Ollama smoke test on an RTX 3060 12 GB and 32 GB system RAM:
+
+| Runtime check | Result |
+|---|---:|
+| Model | `qwen3:14b` Q4_K_M |
+| Model loaded into VRAM | 100% (about 10.2 GB runtime allocation) |
+| First cold request | About 55 seconds |
+| Second warm request | About 2 seconds |
+| Grounding sources used | 2 |
+| Action preserved | `book_consultation` |
+
+These timings are a single local smoke test, not a performance benchmark.
 
 ## Privacy and safety choices
 
@@ -124,6 +142,8 @@ Verified locally on July 14, 2026:
 - It never stores raw chat messages, names, phone numbers, or email addresses.
 - The knowledge base is synthetic and contains no client or proprietary business information.
 - The assistant never diagnoses, guarantees results, invents availability, or replaces a clinician.
+- Local Ollama generation receives the visitor message and retrieved synthetic facts; it does not
+  receive stored events or customer records.
 
 See [SECURITY.md](SECURITY.md) for limitations and safe reporting.
 
@@ -134,7 +154,8 @@ See [SECURITY.md](SECURITY.md) for limitations and safe reporting.
 - [x] Safety, privacy, and human-handoff policies
 - [x] Automated tests and behavior evaluation
 - [x] Docker and continuous integration
-- [ ] Add a provider-neutral LLM adapter behind the policy layer
+- [x] Add a provider-neutral generator interface and local Ollama adapter behind the policy layer
+- [x] Integrate the locally available `qwen3:14b` model
 - [ ] Expand the evaluation set to 100 reviewed cases
 - [ ] Add authenticated aggregate metrics and an observability dashboard
 - [ ] Run a documented red-team review before any real-world pilot

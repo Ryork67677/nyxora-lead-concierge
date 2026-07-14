@@ -1,5 +1,6 @@
+from nyxora_concierge.generation import GenerationError
 from nyxora_concierge.knowledge import KnowledgeBase
-from nyxora_concierge.models import ChatRequest, Intent, RecommendedAction
+from nyxora_concierge.models import ChatRequest, GenerationMode, Intent, RecommendedAction
 from nyxora_concierge.service import ConciergeService
 
 
@@ -54,3 +55,33 @@ def test_prompt_injection_does_not_reveal_instructions() -> None:
     assert "prompt_injection" in result.safety_flags
     assert "cannot reveal" in result.response
 
+
+class FakeGenerator:
+    def rewrite(self, *, user_message: str, facts: tuple[str, ...]) -> str:
+        assert user_message
+        assert facts
+        return "I can help you begin a consultation request with the team."
+
+
+class FailingGenerator:
+    def rewrite(self, *, user_message: str, facts: tuple[str, ...]) -> str:
+        raise GenerationError("offline")
+
+
+def test_model_rewrites_only_after_grounding() -> None:
+    service = ConciergeService(KnowledgeBase.from_package(), generator=FakeGenerator())
+    result = service.respond(
+        ChatRequest(session_id="model-session-1", message="Can I book a consultation?")
+    )
+    assert result.response.startswith("I can help")
+    assert result.generation_mode is GenerationMode.OLLAMA
+    assert result.recommended_action is RecommendedAction.BOOK_CONSULTATION
+
+
+def test_model_failure_uses_deterministic_fallback() -> None:
+    service = ConciergeService(KnowledgeBase.from_package(), generator=FailingGenerator())
+    result = service.respond(
+        ChatRequest(session_id="model-session-2", message="How do I prepare for treatment?")
+    )
+    assert result.generation_mode is GenerationMode.FALLBACK
+    assert "Preparation instructions" in result.response

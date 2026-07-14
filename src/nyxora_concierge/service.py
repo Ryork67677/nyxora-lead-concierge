@@ -1,10 +1,15 @@
 from __future__ import annotations
 
+import logging
+
+from .generation import GenerationError, GroundedGenerator
 from .knowledge import KnowledgeBase
-from .models import ChatRequest, ChatResponse, Intent, RecommendedAction
+from .models import ChatRequest, ChatResponse, GenerationMode, Intent, RecommendedAction
 from .qualification import qualify_lead
 from .repository import EventRepository
 from .safety import evaluate_safety
+
+logger = logging.getLogger(__name__)
 
 URGENT_RESPONSE = (
     "Your message may describe an urgent medical issue. This assistant cannot assess emergencies. "
@@ -28,9 +33,15 @@ FALLBACK_RESPONSE = (
 
 
 class ConciergeService:
-    def __init__(self, knowledge_base: KnowledgeBase, repository: EventRepository | None = None):
+    def __init__(
+        self,
+        knowledge_base: KnowledgeBase,
+        repository: EventRepository | None = None,
+        generator: GroundedGenerator | None = None,
+    ):
         self.knowledge_base = knowledge_base
         self.repository = repository
+        self.generator = generator
 
     def respond(self, request: ChatRequest) -> ChatResponse:
         safety = evaluate_safety(request.message)
@@ -77,6 +88,17 @@ class ConciergeService:
         if matches:
             answer = " ".join(entry.content for entry in matches)
             sources = [entry.title for entry in matches]
+            generation_mode = GenerationMode.DETERMINISTIC
+            if self.generator is not None:
+                try:
+                    answer = self.generator.rewrite(
+                        user_message=request.message,
+                        facts=tuple(entry.content for entry in matches),
+                    )
+                    generation_mode = GenerationMode.OLLAMA
+                except GenerationError:
+                    logger.warning("Model unavailable; using the grounded deterministic response")
+                    generation_mode = GenerationMode.FALLBACK
             if intent is Intent.BOOKING:
                 action = RecommendedAction.BOOK_CONSULTATION
                 requires_human = False
@@ -89,6 +111,7 @@ class ConciergeService:
         elif intent in {Intent.PRICING, Intent.CANCELLATION}:
             answer = FALLBACK_RESPONSE
             sources = []
+            generation_mode = GenerationMode.DETERMINISTIC
             action = RecommendedAction.HUMAN_HANDOFF
             requires_human = True
         elif intent is Intent.BOOKING:
@@ -97,11 +120,13 @@ class ConciergeService:
                 "interested in, your preferred timeframe, and whether you prefer a call or text."
             )
             sources = []
+            generation_mode = GenerationMode.DETERMINISTIC
             action = RecommendedAction.BOOK_CONSULTATION
             requires_human = False
         else:
             answer = FALLBACK_RESPONSE
             sources = []
+            generation_mode = GenerationMode.DETERMINISTIC
             action = RecommendedAction.HUMAN_HANDOFF
             requires_human = True
 
@@ -112,4 +137,5 @@ class ConciergeService:
             recommended_action=action,
             requires_human=requires_human,
             knowledge_sources=sources,
+            generation_mode=generation_mode,
         )

@@ -8,6 +8,7 @@ from fastapi.responses import JSONResponse
 
 from . import __version__
 from .config import Settings
+from .generation import OllamaGenerator
 from .knowledge import KnowledgeBase
 from .models import ChatRequest, ChatResponse, HealthResponse
 from .repository import EventRepository
@@ -20,11 +21,20 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     logger = logging.getLogger("nyxora_concierge")
     repository = EventRepository(active_settings.database_path)
     knowledge_base = KnowledgeBase.from_package()
+    generator = (
+        OllamaGenerator(
+            base_url=active_settings.ollama_base_url,
+            model=active_settings.ollama_model,
+            timeout_seconds=active_settings.ollama_timeout_seconds,
+        )
+        if active_settings.ollama_base_url
+        else None
+    )
 
     @asynccontextmanager
     async def lifespan(app: FastAPI):
         repository.initialize()
-        app.state.service = ConciergeService(knowledge_base, repository)
+        app.state.service = ConciergeService(knowledge_base, repository, generator)
         yield
 
     application = FastAPI(
@@ -55,4 +65,3 @@ def create_app(settings: Settings | None = None) -> FastAPI:
 
 
 app = create_app()
-

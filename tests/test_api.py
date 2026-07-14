@@ -9,7 +9,7 @@ def test_health_endpoint(tmp_path) -> None:
     with TestClient(app) as client:
         response = client.get("/health")
     assert response.status_code == 200
-    assert response.json() == {"status": "ok", "version": "0.1.0"}
+    assert response.json() == {"status": "ok", "version": "0.2.0"}
 
 
 def test_chat_endpoint(tmp_path) -> None:
@@ -37,4 +37,3 @@ def test_invalid_session_is_rejected(tmp_path) -> None:
             json={"session_id": "bad id", "message": "hello"},
         )
     assert response.status_code == 422
-
