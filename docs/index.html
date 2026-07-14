@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta
+      name="description"
+      content="Recorded behavior demo for Russell York's Nyxora Lead Concierge portfolio project."
+    >
+    <title>Nyxora Lead Concierge — Behavior Demo</title>
+    <link rel="stylesheet" href="demo.css">
+  </head>
+  <body>
+    <header class="site-header">
+      <a class="brand" href="#top" aria-label="Nyxora Lead Concierge home">
+        <span class="brand-mark" aria-hidden="true">N</span>
+        <span>Nyxora Lead Concierge</span>
+      </a>
+      <a class="source-link" href="https://github.com/Ryork67677/nyxora-lead-concierge">
+        View source on GitHub
+      </a>
+    </header>
+
+    <main id="top">
+      <section class="hero" aria-labelledby="hero-title">
+        <div class="eyebrow">Russell York · AI engineering portfolio</div>
+        <h1 id="hero-title">A local AI concierge with guardrails that stay in charge.</h1>
+        <p class="hero-copy">
+          Qwen 3 runs locally through Ollama to rewrite verified facts. Deterministic code—not the
+          language model—controls emergency guidance, clinical handoff, lead scoring, and business
+          actions.
+        </p>
+        <div class="hero-metrics" aria-label="Verified project metrics">
+          <div><strong>24</strong><span>tests passing</span></div>
+          <div><strong>94%</strong><span>code coverage</span></div>
+          <div><strong>12/12</strong><span>behavior cases</span></div>
+          <div><strong>100%</strong><span>safety recall</span></div>
+        </div>
+      </section>
+
+      <section class="demo-section" aria-labelledby="demo-title">
+        <div class="section-heading">
+          <div>
+            <div class="eyebrow">Always-available portfolio artifact</div>
+            <h2 id="demo-title">Recorded behavior demo</h2>
+          </div>
+          <span class="honesty-badge">Not a live model connection</span>
+        </div>
+        <p class="section-copy">
+          Choose a reviewed scenario to see how the API responds. These representative outputs
+          remain available when the development PC is offline and do not collect visitor data.
+        </p>
+
+        <div class="demo-grid">
+          <div class="scenario-panel" aria-label="Demo scenarios">
+            <button class="scenario active" type="button" data-scenario="booking">
+              <span class="scenario-icon" aria-hidden="true">01</span>
+              <span><strong>Qualified booking lead</strong><small>Grounded local-model response</small></span>
+            </button>
+            <button class="scenario" type="button" data-scenario="pricing">
+              <span class="scenario-icon" aria-hidden="true">02</span>
+              <span><strong>Pricing question</strong><small>Human confirmation required</small></span>
+            </button>
+            <button class="scenario" type="button" data-scenario="clinical">
+              <span class="scenario-icon" aria-hidden="true">03</span>
+              <span><strong>Clinical question</strong><small>Model bypassed; clinician handoff</small></span>
+            </button>
+            <button class="scenario" type="button" data-scenario="urgent">
+              <span class="scenario-icon" aria-hidden="true">04</span>
+              <span><strong>Urgent symptoms</strong><small>Emergency policy takes priority</small></span>
+            </button>
+          </div>
+
+          <article class="conversation" aria-live="polite">
+            <div class="conversation-topbar">
+              <span><i class="status-dot" aria-hidden="true"></i> Recorded API response</span>
+              <span id="mode-chip" class="mode-chip">ollama</span>
+            </div>
+            <div class="messages">
+              <div class="message visitor">
+                <span class="message-label">Visitor</span>
+                <p id="visitor-message"></p>
+              </div>
+              <div class="message assistant">
+                <span class="message-label">Nyxora Concierge</span>
+                <p id="assistant-message"></p>
+              </div>
+            </div>
+            <dl class="result-grid">
+              <div><dt>Intent</dt><dd id="intent-value"></dd></div>
+              <div><dt>Lead score</dt><dd id="score-value"></dd></div>
+              <div><dt>Action</dt><dd id="action-value"></dd></div>
+              <div><dt>Human handoff</dt><dd id="handoff-value"></dd></div>
+            </dl>
+            <div class="sources">
+              <span>Verified sources</span>
+              <div id="source-list" class="source-list"></div>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <section class="architecture" aria-labelledby="architecture-title">
+        <div class="eyebrow">Decision authority</div>
+        <h2 id="architecture-title">The model improves language. The policy controls behavior.</h2>
+        <div class="pipeline" role="list" aria-label="Request processing pipeline">
+          <div role="listitem"><span>1</span><strong>Validate</strong><small>Bounded structured input</small></div>
+          <div role="listitem"><span>2</span><strong>Safety first</strong><small>Urgent and clinical rules</small></div>
+          <div role="listitem"><span>3</span><strong>Qualify</strong><small>Intent and lead score</small></div>
+          <div role="listitem"><span>4</span><strong>Retrieve</strong><small>Versioned verified facts</small></div>
+          <div role="listitem"><span>5</span><strong>Rewrite</strong><small>Optional local Qwen 3</small></div>
+          <div role="listitem"><span>6</span><strong>Route</strong><small>Explicit action or handoff</small></div>
+        </div>
+      </section>
+
+      <section class="disclosure" aria-labelledby="scope-title">
+        <div>
+          <div class="eyebrow">Honest scope</div>
+          <h2 id="scope-title">Built to demonstrate engineering judgment—not clinical authority.</h2>
+        </div>
+        <p>
+          This educational portfolio project uses synthetic information and stores no demo
+          conversations. It is not clinically validated, does not provide medical advice, and is
+          not connected to a real provider or customer system.
+        </p>
+      </section>
+    </main>
+
+    <footer>
+      <span>Designed and engineered by Russell York</span>
+      <a href="https://github.com/Ryork67677">GitHub profile</a>
+    </footer>
+    <script src="demo.js"></script>
+  </body>
+</html>

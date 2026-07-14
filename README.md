@@ -9,6 +9,8 @@ It is the code-first companion to the broader Nyxora automation platform and dem
 API design, grounded retrieval, safety controls, evaluation, testing, persistence, and
 containerized deployment.
 
+**[View the always-available recorded behavior demo](https://ryork67677.github.io/nyxora-lead-concierge/)**
+
 > **Project status:** v0.2 local-model integration. Responses are grounded in a versioned
 > knowledge base and deterministic policy layer. A local `qwen3:14b` model may rewrite verified
 > facts for clarity, but it cannot bypass escalation, action routing, or evaluation rules.
