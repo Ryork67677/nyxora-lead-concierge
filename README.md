@@ -4,16 +4,17 @@
 [![Python 3.11+](https://img.shields.io/badge/python-3.11%2B-3776AB.svg)](https://www.python.org/)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 
-A privacy-conscious lead qualification and human-handoff API built by **Russell York**.
-It is the code-first companion to the broader Nyxora automation platform and demonstrates
-API design, grounded retrieval, safety controls, evaluation, testing, persistence, and
-containerized deployment.
+A privacy-conscious lead qualification and human-handoff API built by **Russell York**. It is the
+code-first companion to the broader Nyxora automation platform and demonstrates API design,
+grounded retrieval, safety controls, evaluation, testing, persistence, and production-readiness
+engineering.
 
 **[View the always-available recorded behavior demo](https://ryork67677.github.io/nyxora-lead-concierge/)**
 
-> **Project status:** v0.2 local-model integration. Responses are grounded in a versioned
-> knowledge base and deterministic policy layer. A local `qwen3:14b` model may rewrite verified
-> facts for clarity, but it cannot bypass escalation, action routing, or evaluation rules.
+> **Project status:** v0.3 production-hardening release. Production requires authenticated
+> requests and adds privacy-safe JSON logs, request correlation, Prometheus metrics,
+> dependency-aware readiness, structured failures, security checks, and a hardened
+> single-container deployment.
 
 This educational project does not provide medical advice and is not connected to real customer
 data or a healthcare provider.
@@ -30,23 +31,27 @@ uses a fail-closed design:
 - Raw messages and session IDs are not stored.
 - Automated evaluation measures intent, action, handoff, and safety behavior.
 
-## Capabilities
+## Production-readiness capabilities
 
 - `POST /v1/chat` with validated, structured input and output
-- Intent classification and transparent 0–100 lead qualification
+- Production-required bearer authentication using configured SHA-256 key digests
+- Intent classification and transparent 0-100 lead qualification
 - Grounded retrieval with visible knowledge-source names
 - Optional local generation through Ollama and `qwen3:14b`, with deterministic fallback
 - Emergency, clinical-review, and prompt-injection detection
 - Explicit `answer`, `book_consultation`, `human_handoff`, and `emergency_help` actions
 - Consent-gated SQLite event storage using hashed session identifiers
-- FastAPI interactive documentation at `/docs`
-- Docker runtime, GitHub Actions CI, local quality gates, tests, and behavior evaluations
+- JSON request logs with correlation IDs and no message, session, or credential content
+- Authenticated Prometheus metrics plus separate `/livez` and `/readyz` probes
+- RFC-style problem responses for authentication, validation, storage, and server failures
+- Hardened non-root Docker runtime, dependency audit, container smoke test, CI, and Dependabot
 
 ## Architecture
 
 ```mermaid
 flowchart LR
-    Client[Website or API client] --> API[FastAPI validation]
+    Client[Website or API client] --> Auth[Bearer authentication]
+    Auth --> API[FastAPI validation]
     API --> Safety[Safety policy]
     Safety -->|urgent or clinical| Handoff[Human or emergency handoff]
     Safety -->|allowed| Qualify[Intent and lead scoring]
@@ -56,15 +61,17 @@ flowchart LR
     Retrieval -->|model unavailable| Response
     Response --> Client
     Response -->|explicit consent only| Store[(Privacy-minimized events)]
+    API --> Telemetry[JSON logs + Prometheus metrics]
 ```
 
-The system is a modular monolith so the behavior remains easy to run, test, and explain. See
+The system remains a modular monolith so a small service stays easy to run, test, and explain. See
 [the architecture guide](docs/architecture.md) and
-[ADR-0001](docs/adr/0001-modular-grounded-baseline.md) for the design trade-offs.
+[ADR-0003](docs/adr/0003-production-hardening.md) for the production-hardening trade-offs.
 
-## Quick start
+## Development quick start
 
-Requirements: Python 3.11 or newer.
+Requirements: Python 3.11 or newer. Development defaults to no authentication and exposes the
+interactive API documentation.
 
 ```bash
 python -m venv .venv
@@ -81,26 +88,33 @@ curl -X POST http://127.0.0.1:8000/v1/chat \
   -H "Content-Type: application/json" \
   -d '{
     "session_id": "demo-session-001",
-    "message": "I am a first-time client and want to book a consultation next week. Please text me.",
+    "message": "I am a first-time client and want to book a consultation next week.",
     "consent_to_store": false
   }'
 ```
 
-Example response:
+The response includes a grounded answer, intent, qualification score, recommended action, human
+handoff decision, safety flags, knowledge sources, generation mode, and storage outcome.
 
-```json
-{
-  "response": "Appointment requests require a preferred service, date range, and contact method...",
-  "intent": "booking",
-  "qualification_score": 100,
-  "recommended_action": "book_consultation",
-  "requires_human": false,
-  "safety_flags": [],
-  "knowledge_sources": ["Appointment requests", "Consultations"],
-  "generation_mode": "ollama",
-  "stored": false
-}
+## Hardened container deployment
+
+Production fails startup unless `API_KEY_HASHES` contains at least one SHA-256 digest. The Compose
+deployment binds to loopback, disables docs, drops Linux capabilities, uses a read-only root
+filesystem, and persists only the SQLite data directory. Read the
+[operations runbook](docs/operations_runbook.md) and
+[deploy checklist](docs/deploy_checklist.md) before running it.
+
+```powershell
+$key = "replace-with-a-long-random-secret"
+$bytes = [Text.Encoding]::UTF8.GetBytes($key)
+$env:API_KEY_HASHES = [Convert]::ToHexString(
+  [Security.Cryptography.SHA256]::HashData($bytes)
+).ToLower()
+docker compose up --build -d
 ```
+
+Production clients send `Authorization: Bearer <raw-key>`. The raw key is never configured in the
+application, persisted, or logged. Multiple comma-separated digests permit key rotation.
 
 ## Test and evaluate
 
@@ -108,21 +122,24 @@ Example response:
 ruff check .
 pytest
 python -m nyxora_concierge.evaluation
+python -m pip_audit --skip-editable
 ```
 
-The evaluation suite contains ordinary lead questions, unsupported questions, clinical edge
-cases, urgent symptoms, and a prompt-injection attempt. CI requires a 90% end-to-end case pass
-rate and 85% test coverage. These are initial engineering gates, not claims of clinical validation
-or production readiness.
+The evaluation suite contains ordinary lead questions, unsupported questions, clinical edge cases,
+urgent symptoms, and a prompt-injection attempt. CI requires a 90% end-to-end case pass rate and 85%
+test coverage. CI also audits dependencies and smoke-tests the production container, including
+fail-closed authentication.
 
-Verified locally on July 14, 2026:
+Verified locally on July 15, 2026:
 
 | Check | Result |
 |---|---:|
-| Automated tests | 24 passed |
-| Code coverage | 94% |
+| Automated tests | 55 passed |
+| Code coverage | 96% |
 | Behavior evaluation | 12/12 cases passed |
 | Safety-case recall | 100% |
+| Dependency audit | No known vulnerabilities |
+| Hardened container smoke | Authentication, readiness, chat, and metrics passed |
 
 Local Ollama smoke test on an RTX 3060 12 GB and 32 GB system RAM:
 
@@ -142,6 +159,7 @@ These timings are a single local smoke test, not a performance benchmark.
 - Storage is disabled unless `consent_to_store` is true.
 - Even with consent, the application stores only outcome metadata and a SHA-256 session hash.
 - It never stores raw chat messages, names, phone numbers, or email addresses.
+- Request logs and metrics use bounded operational fields and exclude request bodies and credentials.
 - The knowledge base is synthetic and contains no client or proprietary business information.
 - The assistant never diagnoses, guarantees results, invents availability, or replaces a clinician.
 - Local Ollama generation receives the visitor message and retrieved synthetic facts; it does not
@@ -151,20 +169,23 @@ See [SECURITY.md](SECURITY.md) for limitations and safe reporting.
 
 ## Roadmap
 
-- [x] Grounded knowledge retrieval and explicit citations
-- [x] Lead qualification and action routing
-- [x] Safety, privacy, and human-handoff policies
-- [x] Automated tests and behavior evaluation
-- [x] Docker, repeatable local quality gates, and GitHub Actions CI
-- [x] Add a provider-neutral generator interface and local Ollama adapter behind the policy layer
-- [x] Integrate the locally available `qwen3:14b` model
+- [x] Grounded retrieval, qualification, action routing, and deterministic safety policy
+- [x] Automated tests, behavior evaluation, Docker, and GitHub Actions CI
+- [x] Provider-neutral local Ollama integration with deterministic fallback
+- [x] Production-required bearer authentication and key rotation support
+- [x] JSON request logs, correlation IDs, Prometheus metrics, and readiness checks
+- [x] Structured problem responses and storage failure handling
+- [x] Hardened container, dependency audit, deployment checklist, and rollback runbook
 - [ ] Expand the evaluation set to 100 reviewed cases
-- [ ] Add authenticated aggregate metrics and an observability dashboard
+- [ ] Connect metrics and logs to a managed observability backend and dashboard
+- [ ] Replace API keys with OIDC and role authorization for human operators
+- [ ] Migrate SQLite to managed encrypted storage before horizontal scaling
 - [ ] Run a documented red-team review before any real-world pilot
 
 ## Honest scope
 
-Russell York designed the project direction, requirements, safety behavior, and portfolio story
-with AI-assisted implementation. All code is intended to be reviewed, tested, understood, and
-iteratively improved by the project owner. The repository does not claim production deployment,
-clinical validation, or real customer usage.
+Russell York designed the project direction, requirements, safety behavior, and portfolio story with
+AI-assisted implementation. All code is intended to be reviewed, tested, understood, and iteratively
+improved by the project owner. The repository does not claim production deployment, clinical
+validation, or real customer usage. Version 0.3 demonstrates production-readiness practices; it is
+not production-proven and must not receive protected health information.

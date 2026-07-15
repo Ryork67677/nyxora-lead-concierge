@@ -9,7 +9,7 @@ def test_health_endpoint(tmp_path) -> None:
     with TestClient(app) as client:
         response = client.get("/health")
     assert response.status_code == 200
-    assert response.json() == {"status": "ok", "version": "0.2.0"}
+    assert response.json() == {"status": "ok", "version": "0.3.0"}
 
 
 def test_chat_endpoint(tmp_path) -> None:
