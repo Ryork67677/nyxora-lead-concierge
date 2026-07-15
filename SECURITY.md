@@ -16,7 +16,13 @@ This repository is an educational portfolio project. It has not completed a heal
 review, penetration test, clinical review, or production privacy assessment. It should not receive
 protected health information or be used to make medical or treatment decisions.
 
-Before any real-world deployment, add authentication, authorization, rate limiting, managed secret
-storage, encryption controls, data-retention enforcement, dependency scanning, audit logging, and
-independent security and privacy review.
+Version 0.3 adds production-required bearer authentication, privacy-safe structured request logs,
+dependency auditing, bounded Prometheus metrics, trusted-host validation, hardened container
+settings, and explicit failure responses. These controls improve the engineering baseline but do
+not constitute healthcare compliance or a completed security review.
+
+Before any real-world deployment, add role authorization and external identity, edge rate limiting,
+managed secret storage, TLS, encrypted managed storage, backup and data-retention enforcement,
+central audit retention, penetration testing, and independent security, privacy, legal, and clinical
+review.
 

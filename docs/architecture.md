@@ -21,12 +21,19 @@ medical advice, inventing business facts, or collecting unnecessary personal dat
    future n8n or website integration.
 7. **Persistence is opt-in and minimized.** With consent, only outcome metadata and a hashed
    session identifier are stored in SQLite. Raw messages are not retained.
+8. **Production requests are authenticated.** Production startup requires one or more SHA-256
+   bearer-key digests. The application compares supplied keys in constant time and never logs them.
+9. **Operations are observable.** Request middleware adds correlation IDs, privacy-safe JSON logs,
+   low-cardinality Prometheus metrics, and separate liveness and readiness signals.
 
 ## Components
 
 | Component | Responsibility | Key failure behavior |
 |---|---|---|
 | `main.py` | HTTP lifecycle and endpoints | Validates and returns safe server errors |
+| `auth.py` | Hashed bearer-key verification | Rejects missing or invalid credentials |
+| `observability.py` | JSON logs and request context | Excludes request content and credentials |
+| `metrics.py` | HTTP and business outcome metrics | Uses bounded labels to avoid cardinality growth |
 | `safety.py` | Urgent, clinical, and injection policy | Routes to human or emergency help |
 | `qualification.py` | Intent and lead score | Defaults to general/low confidence |
 | `knowledge.py` | Reviewable retrieval | Returns no answer when ungrounded |
@@ -42,10 +49,14 @@ medical advice, inventing business facts, or collecting unnecessary personal dat
 - Ollama is treated as untrusted output and is placed after safety checks and retrieval.
 - SQLite is local application state and must not be publicly exposed.
 - Human operators remain responsible for appointment confirmation and clinical communication.
+- API-key hashes are trusted configuration; raw keys belong only in a secret manager and clients.
+- Metrics and logs cross an operational trust boundary and deliberately exclude visitor content.
 
-## Production gaps
+## Remaining production gaps
 
-The current version is portfolio software, not a production healthcare system. A real pilot would
-need authenticated staff tools, rate limiting, secrets management, encrypted managed storage,
-retention policies, monitoring, legal/privacy review, model-provider review, and broader safety
-evaluation with domain experts.
+Version 0.3 is production-shaped portfolio software, not a production healthcare system. It adds
+authentication, structured logging, metrics, health probes, hardened deployment, failure handling,
+and release checks. A real pilot still needs TLS ingress, rate limiting, managed secrets, encrypted
+managed storage, backup and retention enforcement, alert routing, OAuth/OIDC and role authorization,
+penetration testing, legal/privacy review, model-provider review, and broader safety evaluation with
+domain experts.

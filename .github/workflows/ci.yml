@@ -25,3 +25,47 @@ jobs:
         run: pytest
       - name: Evaluate behavior
         run: python -m nyxora_concierge.evaluation --minimum-pass-rate 0.90
+      - name: Audit Python dependencies
+        run: python -m pip_audit --skip-editable
+
+  container:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: Build hardened image
+        run: docker build --pull --tag nyxora-lead-concierge:ci .
+      - name: Start production configuration
+        run: >-
+          docker run --detach --name concierge-ci --publish 127.0.0.1:8000:8000
+          --env APP_ENV=production
+          --env API_KEY_HASHES=f1d53277b679c0971c4e82f7c82e2dde89d1146d0709005f9ea5b2421e3d614f
+          --env ALLOWED_HOSTS=127.0.0.1,localhost
+          --read-only --tmpfs /tmp:size=64m --volume concierge-ci-data:/app/data
+          --cap-drop ALL --security-opt no-new-privileges
+          nyxora-lead-concierge:ci
+      - name: Verify production runtime
+        shell: bash
+        run: |
+          set -euo pipefail
+          for attempt in {1..20}; do
+            if curl --fail --silent http://127.0.0.1:8000/readyz >/dev/null; then break; fi
+            if [ "$attempt" -eq 20 ]; then docker logs concierge-ci; exit 1; fi
+            sleep 1
+          done
+          test "$(curl --silent --output /dev/null --write-out '%{http_code}' \
+            --request POST --header 'Content-Type: application/json' \
+            --data '{"session_id":"ci-session-001","message":"Book a consultation"}' \
+            http://127.0.0.1:8000/v1/chat)" = "401"
+          curl --fail --silent --request POST \
+            --header 'Authorization: Bearer ci-production-key' \
+            --header 'Content-Type: application/json' \
+            --data '{"session_id":"ci-session-001","message":"Book a consultation"}' \
+            http://127.0.0.1:8000/v1/chat | grep 'book_consultation'
+          curl --fail --silent --header 'Authorization: Bearer ci-production-key' \
+            http://127.0.0.1:8000/metrics | grep 'nyxora_http_requests_total'
+      - name: Show container logs on failure
+        if: failure()
+        run: docker logs concierge-ci
+      - name: Stop container
+        if: always()
+        run: docker rm --force concierge-ci || true

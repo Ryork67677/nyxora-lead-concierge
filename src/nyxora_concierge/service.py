@@ -4,9 +4,10 @@ import logging
 
 from .generation import GenerationError, GroundedGenerator
 from .knowledge import KnowledgeBase
+from .metrics import ServiceMetrics
 from .models import ChatRequest, ChatResponse, GenerationMode, Intent, RecommendedAction
 from .qualification import qualify_lead
-from .repository import EventRepository
+from .repository import EventRepository, RepositoryError
 from .safety import evaluate_safety
 
 logger = logging.getLogger(__name__)
@@ -38,10 +39,12 @@ class ConciergeService:
         knowledge_base: KnowledgeBase,
         repository: EventRepository | None = None,
         generator: GroundedGenerator | None = None,
+        metrics: ServiceMetrics | None = None,
     ):
         self.knowledge_base = knowledge_base
         self.repository = repository
         self.generator = generator
+        self.metrics = metrics
 
     def respond(self, request: ChatRequest) -> ChatResponse:
         safety = evaluate_safety(request.message)
@@ -78,8 +81,21 @@ class ConciergeService:
             result = self._grounded_response(request, qualification.intent, qualification.score)
 
         if request.consent_to_store and self.repository is not None:
-            self.repository.record(request.session_id, result)
-            result.stored = True
+            try:
+                self.repository.record(request.session_id, result)
+                result.stored = True
+            except RepositoryError:
+                if self.metrics is not None:
+                    self.metrics.record_storage_failure()
+                raise
+
+        if self.metrics is not None:
+            self.metrics.record_response(
+                intent=result.intent.value,
+                action=result.recommended_action.value,
+                generation_mode=result.generation_mode.value,
+                requires_human=result.requires_human,
+            )
 
         return result
 

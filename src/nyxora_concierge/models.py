@@ -66,3 +66,8 @@ class ChatResponse(BaseModel):
 class HealthResponse(BaseModel):
     status: str
     version: str
+
+
+class ReadinessResponse(HealthResponse):
+    database: str
+    knowledge_base: str
